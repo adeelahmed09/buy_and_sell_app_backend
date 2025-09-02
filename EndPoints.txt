@@ -1,0 +1,26 @@
+http://localhost:5001/api
+
+/user ---> post req: req.headers.authorization  (add or update user)
+
+/listings
+        /create-listing --> post req: req.headers.authorization ,req.body{
+    title,
+    description,
+    price,
+    currency,
+    make,
+    model,
+    year,
+    mileageKm,
+    engineCc,
+    fuelType,
+    color,
+    bodyType,
+    condition,
+    vin,
+    locationText,
+    lat,
+    lng,
+    isFeatured,
+    status,
+}, req.files[images]

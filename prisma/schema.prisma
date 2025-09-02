@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String          @id @default(cuid())
+  firebaseUid      String          @unique
+  email            String          @unique
+  phone            String?         @unique
+  name             String?
+  photoUrl         String?
+  role             Role            @default(USER)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  listing          Listing[]
+  favorites        Favorite[]
+  featuredOrders   FeaturedOrder[]
+  reports          Report[]        @relation("UserReports")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  HYBRID
+  ELECTRIC
+  CNG
+  LPG
+  OTHER
+}
+
+enum BodyType {
+  SEDAN
+  HATCHBACK
+  SUV
+  TRUCK
+  COUPE
+  CONVERTIBLE
+  VAN
+  WAGON
+  OTHER
+}
+
+enum Condition {
+  NEW
+  USED
+  CERTIFIED
+  DAMAGED
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  SOLD
+  REJECTED
+}
+
+model Listing {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  title         String
+  description   String
+  price         Int
+  currency      String         @default("PKR")
+  make          String
+  model         String
+  year          Int
+  mileageKm     Int
+  engineCc      Int?
+  fuelType      FuelType
+  color         String?
+  bodyType      BodyType?
+  condition     Condition
+  vin           String?
+  locationText  String
+  lat           Float?
+  lng           Float?
+  isFeatured    Boolean        @default(false)
+  status        ListingStatus  @default(DRAFT)
+  views         Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  photos        Photo[]
+  favorites     Favorite[]
+  featuredOrder FeaturedOrder?
+  reports        Report[]
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  listingId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+}
+
+
+
+model FeaturedOrder {
+  id        String   @id @default(cuid())
+  listingId String   @unique
+  userId    String
+  stripeId  String   @unique
+  amount    Int
+  currency  String   @default("PKR")
+  status    String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  listingId  String
+  reporterId String
+  reason     String
+  createdAt  DateTime @default(now())
+
+  // relations
+  listing  Listing @relation(fields: [listingId], references: [id])
+  reporter User    @relation("UserReports", fields: [reporterId], references: [id])
+}
